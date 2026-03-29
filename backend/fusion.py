@@ -302,7 +302,10 @@ def fuse(cnn_score: float, heuristics: dict, rppg: dict | None = None) -> dict:
     }
 
 def _mock_verdict_markers(h, is_fake):
-    """Generates verdict-dependent marker density for the UI."""
+    """
+    Generates markers in 224x224 model space and scales them to percentages.
+    Formula used: x_percent = (x_model / 224) * 100
+    """
     count = random.randint(8, 14) if is_fake else random.randint(3, 5)
     markers = []
     
@@ -312,15 +315,26 @@ def _mock_verdict_markers(h, is_fake):
         "Orbital Artifact", "Compression Noise", "Rendering Jitter"
     ]
     
+    # We simulate model detections in a 224x224 grid
+    # To keep them on the face, we center them around the middle [60-160]
     for i in range(count):
         label = facial_points[i % len(facial_points)]
         if is_fake and i > 5:
             label = random.choice(["Suspected Artifact", "Geometric Error", "Pixel Ghosting", "Temporal Drift"])
             
+        # Model space coordinates (0-224)
+        # We bias them towards the center (70-150) to ensure they stay on the subject
+        x_model = random.randint(65, 155)
+        y_model = random.randint(65, 155)
+        
+        # Scale to percentage for frontend: (coord / 224) * 100
+        x_pct = round((x_model / 224.0) * 100, 2)
+        y_pct = round((y_model / 224.0) * 100, 2)
+
         markers.append({
             "label": label,
-            "coordinates": {"x": random.randint(15, 85), "y": random.randint(15, 85)},
-            "size": random.randint(40, 65)
+            "coordinates": {"x": x_pct, "y": y_pct},
+            "size": random.randint(45, 65)
         })
     return markers
 

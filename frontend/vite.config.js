@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/Castellan---The-Ai---Deepfake-detector-/',
+  base: '/Castellan-The-ultimate-Ai-deepfake-detector/',
 })

@@ -3,12 +3,19 @@ import './index.css';
 import './App.css';
 import UploadScreen from './components/UploadScreen';
 import AnalysisScreen from './components/AnalysisScreen';
+import OrbitalSystem from './components/OrbitalSystem';
 
 // ── Fabric Canvas Animation ──────────────────────────────────────────────────
-function FabricCanvas() {
+function FabricCanvas({ isFake }) {
   const canvasRef = useRef(null);
   const mouse = useRef({ x: -9999, y: -9999 });
   const animRef = useRef(null);
+  const isFakeRef = useRef(isFake);
+  const crossScaleRef = useRef({}); // tracks per-dot cross scale for pop-in
+
+  useEffect(() => {
+    isFakeRef.current = isFake;
+  }, [isFake]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -17,17 +24,20 @@ function FabricCanvas() {
 
     const SPACING = 42;
     const BASE_RADIUS = 0.8;
-    const MAX_RADIUS = 1.6;   // very subtle expansion
-    const INFLUENCE = 160;    // wider influence for ultra-fluid gradient
-    const SPRING = 0.1;       // snappier but still fluid
+    const MAX_RADIUS = 1.6;
+    const INFLUENCE = 160;
+    const SPRING = 0.1;
 
     function buildDots() {
       dots = [];
+      crossScaleRef.current = {};
       const cols = Math.ceil(canvas.width / SPACING) + 2;
       const rows = Math.ceil(canvas.height / SPACING) + 2;
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          dots.push({ ox: c * SPACING, oy: r * SPACING, x: c * SPACING, y: r * SPACING });
+          const key = `${r}_${c}`;
+          dots.push({ ox: c * SPACING, oy: r * SPACING, x: c * SPACING, y: r * SPACING, key });
+          crossScaleRef.current[key] = 0;
         }
       }
     }
@@ -38,10 +48,28 @@ function FabricCanvas() {
       buildDots();
     }
 
+    function drawCross(ctx, x, y, size, alpha) {
+      const half = size * 0.75; // Increased size
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 60, 70, ${alpha})`;
+      ctx.lineWidth = 1.6; // Increased thickness
+      ctx.lineCap = 'round';
+      ctx.shadowBlur = 8 * alpha; // Neon glow
+      ctx.shadowColor = 'rgba(255, 60, 70, 0.8)';
+      ctx.beginPath();
+      ctx.moveTo(x - half, y - half);
+      ctx.lineTo(x + half, y + half);
+      ctx.moveTo(x + half, y - half);
+      ctx.lineTo(x - half, y + half);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const mx = mouse.current.x;
       const my = mouse.current.y;
+      const fake = isFakeRef.current;
 
       for (const d of dots) {
         const dx = d.ox - mx;
@@ -50,33 +78,45 @@ function FabricCanvas() {
 
         let r = BASE_RADIUS;
         let alpha = 0.12;
-        let color = '140, 100, 240'; // Deep purple
+        let color = '140, 100, 240';
 
         if (dist < INFLUENCE) {
           const t = 1 - dist / INFLUENCE;
-          const ease = t * t * (3 - 2 * t); 
+          const ease = t * t * (3 - 2 * t);
           const push = ease * 6;
           const angle = Math.atan2(dy, dx);
-          
+
           d.x += (d.ox + Math.cos(angle) * push - d.x) * 0.2;
           d.y += (d.oy + Math.sin(angle) * push - d.y) * 0.2;
-          
+
           r = BASE_RADIUS + (MAX_RADIUS - BASE_RADIUS) * ease;
           alpha = 0.12 + 0.28 * ease;
-          
-          // Subtle color shift to cyan on hover
-          if (ease > 0.5) {
-            color = '61, 214, 245'; // Accent Cyan
-          }
+
+          if (ease > 0.5) color = '61, 214, 245';
         } else {
           d.x += (d.ox - d.x) * SPRING;
           d.y += (d.oy - d.y) * SPRING;
         }
 
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${color}, ${alpha})`;
-        ctx.fill();
+        if (fake) {
+          // Animate cross scale from 0 → 1 (pop-in)
+          const cs = crossScaleRef.current;
+          if (cs[d.key] === undefined) cs[d.key] = 0;
+          if (cs[d.key] < 1) cs[d.key] = Math.min(1, cs[d.key] + 0.035);
+          const crossAlpha = dist < INFLUENCE ? alpha : 0.13;
+          const crossSize = (1.6 + (dist < INFLUENCE ? (MAX_RADIUS - BASE_RADIUS) * (1 - dist / INFLUENCE) * 2 : 0)) * cs[d.key];
+          drawCross(ctx, d.x, d.y, crossSize, crossAlpha);
+        } else {
+          // Reset cross scale so dots re-animate next time isFake becomes true
+          if (crossScaleRef.current[d.key]) crossScaleRef.current[d.key] = 0;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${color}, ${alpha})`;
+          ctx.shadowBlur = 4 * alpha; // Subtle dot glow
+          ctx.shadowColor = `rgba(${color}, 0.6)`;
+          ctx.fill();
+          ctx.shadowBlur = 0; // reset for next
+        }
       }
 
       animRef.current = requestAnimationFrame(draw);
@@ -116,7 +156,7 @@ function ScannerOverlay({ onClose }) {
 }
 
 // ── Main App ─────────────────────────────────────────────────────────────────
-const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:8000' : 'https://castellan-backend.onrender.com');
+const API_URL = 'https://castellan-backend.onrender.com'; // Production backend
 
 function App() {
   const [analysisData, setAnalysisData] = useState(null);
@@ -124,6 +164,7 @@ function App() {
   const [validationWarning, setValidationWarning] = useState(null);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('INITIALIZING SCAN...');
+  const [backendStatus, setBackendStatus] = useState('CHECKING'); // For debugging status
   const pendingFileRef = useRef(null);
 
   const loadingMessages = [
@@ -134,6 +175,20 @@ function App() {
     'COMPUTING FUSION SCORE...',
     'GENERATING REPORT...',
   ];
+
+  useEffect(() => {
+    // Ping backend on mount to verify connection
+    const ping = async () => {
+      try {
+        const res = await fetch(`${API_URL}/`);
+        if (res.ok) setBackendStatus('ONLINE');
+        else setBackendStatus('ERROR');
+      } catch {
+        setBackendStatus('OFFLINE');
+      }
+    };
+    ping();
+  }, []);
 
   useEffect(() => {
     if (!isLoading) return;
@@ -173,12 +228,12 @@ function App() {
       const formData = new FormData();
       formData.append('file', file);
       const res = await fetch(`${API_URL}/analyze`, { method: 'POST', body: formData });
-      if (!res.ok) throw new Error('Analysis failed');
+      if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
       setAnalysisData(data);
     } catch (err) {
-      console.error(err);
-      alert(`Error: Could not reach the analysis server at ${API_URL}.\n\nPlease ensure your Render.com backend is live and active.`);
+      console.error('Fetch Error:', err);
+      alert(`Error: Could not reach the analysis server at ${API_URL}.\n\nPlease ensure your local Python backend is running:\npython -m uvicorn main:app`);
     } finally {
       setIsLoading(false);
     }
@@ -188,18 +243,44 @@ function App() {
 
   const showLanding = !analysisData && !isLoading && !validationWarning;
 
+  const isFake = analysisData?.result === 'FAKE';
+
   return (
     <>
-      <FabricCanvas />
+      <FabricCanvas isFake={isFake} />
+      <OrbitalSystem />
       <div className="faint-background-trace" />
 
       <div className="app-shell">
         {/* ── Header ── */}
         <header className="brand-header">
-          <div className="brand-logo">
-            <img src={`${import.meta.env.BASE_URL}biometric-trace.jpg`} alt="Castellan Logo" />
+          <div
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              cursor: 'default',
+              transition: 'transform 0.25s ease, filter 0.25s ease',
+              borderRadius: '8px',
+              padding: '0.2rem 0.5rem',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.filter = 'brightness(1.12) drop-shadow(0 0 10px rgba(79,142,247,0.22))';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.filter = 'none';
+            }}
+          >
+            <div className="brand-logo">
+              <img src="/biometric-trace.jpg" alt="Castellan Logo" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <span className="brand-name" style={{ fontSize: '1.35rem' }}>CASTELLAN</span>
+              <span style={{ fontSize: '0.6rem', color: backendStatus === 'ONLINE' ? 'var(--color-real)' : 'var(--color-warn)', letterSpacing: '0.1em', fontFamily: 'var(--font-mono)' }}>
+                SYSTEM: {backendStatus}
+              </span>
+            </div>
           </div>
-          <span className="brand-name">CASTELLAN</span>
           <span className="brand-tag">v2.0 · DEEPFAKE ANALYSIS</span>
         </header>
 
@@ -214,19 +295,19 @@ function App() {
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
-              <h2>VALIDATION WARNING</h2>
-              <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-                This does not appear to be a valid human face image.
+              <h2>FACE VALIDATION</h2>
+              <p style={{ color: 'var(--text-primary)', fontSize: '0.9rem', lineHeight: 1.7 }}>
+                This does not appear to be a clear human face. Deepfake analysis works best on facial data.
               </p>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', fontFamily: 'var(--font-mono)', lineHeight: 1.5 }}>
                 {validationWarning.reason}
               </p>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                Do you still want to proceed?
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+                Do you want to continue?
               </p>
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '0.75rem' }}>
                 <button className="btn-ghost" onClick={reset}>UPLOAD NEW</button>
-                <button className="btn-primary" onClick={() => proceedToAnalysis(validationWarning.file)}>PROCEED</button>
+                <button className="btn-primary" onClick={() => proceedToAnalysis(validationWarning.file)}>CONTINUE</button>
               </div>
             </div>
           )}
@@ -247,7 +328,7 @@ function App() {
         {showLanding && (
           <>
             <div className="landing-footer">
-              Castellan analyzes facial patterns, textures, and biological signals to detect AI-generated media.
+              Castellan is a one-click AI detection system that uses advanced methods like rPPG and visual analysis to identify deepfake and AI-generated media easily.
             </div>
             <div className="landing-bar" />
           </>

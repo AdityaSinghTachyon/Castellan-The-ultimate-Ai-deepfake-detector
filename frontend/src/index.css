@@ -75,30 +75,103 @@ h1, h2, h3, h4, .heading-font { font-family: var(--font-heading); }
   align-items: center;
 }
 
+/* ── GX-Style Top-Left Frame ──────────────────────────────── */
+.gx-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  width: 260px;
+  height: 56px;
+  padding: 0 1.1rem;
+  gap: 0.75rem;
+  /* No opaque background — frame is line-only */
+  pointer-events: none;
+}
+
+.gx-frame-logo {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gx-frame-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+  filter: grayscale(1) brightness(1.6);
+}
+
+.gx-frame-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.18);
+  flex-shrink: 0;
+}
+
+.gx-frame-name {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+  flex: 1;
+}
+
+.gx-frame-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Spacer to push content below the GX frame ─────────────── */
+.brand-header-spacer {
+  width: 100%;
+  height: 56px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ── Brand Header (restored) ──────────────────────────── */
 .brand-header {
   width: 100%;
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  padding: 1.5rem 2.5rem;
+  padding: 1.2rem 2.5rem;
   border-bottom: 1px solid var(--border-color);
 }
 
 .brand-logo {
-  width: 38px; height: 38px;
-  border: 1px solid rgba(155,110,250,0.3);
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(155, 110, 250, 0.08);
-  overflow: hidden;
+  width: 120px;
+  height: 120px;
+  border: 1px solid rgba(155, 110, 250, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(155, 110, 250, 0.03);
+  overflow: visible;
+  flex-shrink: 0;
+  margin-right: 0.5rem;
 }
 
 .brand-logo img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  opacity: 0.85;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 1;
+  filter: contrast(1.1) brightness(1.05);
 }
-
 
 .brand-name {
   font-family: var(--font-heading);
@@ -243,6 +316,32 @@ button { cursor: pointer; border: none; background: transparent; font-family: va
 
 @keyframes bar-pan { 0%{background-position:100% 0} 100%{background-position:-100% 0} }
 
+/* ── Liquid Physics Glow ─────────────────────────────────────────── */
+.liquid-glow-container {
+  animation: liquid-pulse 4s ease-in-out infinite;
+}
+
+@keyframes liquid-pulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(155, 110, 250, 0.3), 0 0 10px rgba(79, 142, 247, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(155, 110, 250, 0.5), 0 0 30px rgba(79, 142, 247, 0.3);
+  }
+}
+
+/* ── Sensory Refinements ──────────────────────────────────── */
+.smooth-vibrate {
+  animation: smooth-vibrate 0.35s ease-in-out infinite;
+}
+
+@keyframes smooth-vibrate {
+  0%, 100% { transform: translate(-50%, -50%); }
+  25% { transform: translate(-50.2%, -49.8%); }
+  50% { transform: translate(-49.8%, -50.2%); }
+  75% { transform: translate(-50.1%, -50.1%); }
+}
+
 /* ── Floating Scanner Button ────────────────────────────────────── */
 .float-scanner {
   position: fixed;
@@ -290,6 +389,35 @@ button { cursor: pointer; border: none; background: transparent; font-family: va
 @keyframes scan-pass {
   0%   { top: -2px; }
   100% { top: 100%; }
+}
+
+/* ── Floating upload icon ───────────────────────────────────────── */
+@keyframes float-icon {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+
+/* ── Slow scan line across drop zone ───────────────────────────── */
+@keyframes scan-slow {
+  0%   { top: -2px; }
+  100% { top: 100%; }
+}
+
+/* ── Result impact micro-shake ──────────────────────────────────── */
+@keyframes result-shake {
+  0%   { transform: translate(0, 0); }
+  15%  { transform: translate(-4px, 2px); }
+  30%  { transform: translate(4px, -2px); }
+  45%  { transform: translate(-3px, 1px); }
+  60%  { transform: translate(3px, -1px); }
+  75%  { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* ── Premium CTA button slow pulse ─────────────────────────────── */
+@keyframes btn-pulse {
+  0%, 100% { box-shadow: 0 0 22px rgba(79,142,247,0.28), 0 4px 16px rgba(155,110,250,0.20); }
+  50%       { box-shadow: 0 0 38px rgba(79,142,247,0.44), 0 4px 24px rgba(155,110,250,0.34); }
 }
 
 /* ── Signal Status Colors ───────────────────────────────────────── */
@@ -359,3 +487,32 @@ button { cursor: pointer; border: none; background: transparent; font-family: va
   font-weight: 500;
 }
 
+/* ── Print / PDF Export ─────────────────────────────────────────────────────── */
+@media print {
+  canvas,
+  .float-scanner,
+  .landing-bar,
+  .landing-footer,
+  .brand-header,
+  .brand-header-spacer,
+  .gx-frame,
+  .ads-wrapper,
+  #about-us-btn,
+  #help-btn,
+  #download-report-btn,
+  #new-analysis-btn {
+    display: none !important;
+  }
+
+  #castellan-print-report-wrapper { display: block !important; }
+  #castellan-print-report { display: block !important; }
+
+  @page { size: A4; margin: 1.8cm 2cm; }
+
+  body {
+    background: #fff !important;
+    color: #111 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

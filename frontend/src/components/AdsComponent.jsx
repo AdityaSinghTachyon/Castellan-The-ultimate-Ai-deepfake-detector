@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 const AdsComponent = () => {
-  const images = [
-    `${import.meta.env.BASE_URL}ads/ad1.jpg`,
-    `${import.meta.env.BASE_URL}ads/ad2.jpg`,
-    `${import.meta.env.BASE_URL}ads/ad3.jpg`
-  ];
+  const images = ['/ads/ad1.jpg', '/ads/ad2.jpg', '/ads/ad3.jpg'];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
