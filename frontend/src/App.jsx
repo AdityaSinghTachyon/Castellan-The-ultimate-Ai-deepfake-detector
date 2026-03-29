@@ -156,7 +156,7 @@ function ScannerOverlay({ onClose }) {
 }
 
 // ── Main App ─────────────────────────────────────────────────────────────────
-const API_URL = 'https://castellan-backend.onrender.com'; // Production backend
+const API_URL = 'https://castellan-the-ultimate-ai-deepfake.onrender.com'; // Production backend
 
 function App() {
   const [analysisData, setAnalysisData] = useState(null);
