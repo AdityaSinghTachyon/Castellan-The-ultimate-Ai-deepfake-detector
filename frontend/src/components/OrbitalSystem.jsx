@@ -134,7 +134,7 @@ const OrbitalSystem = () => {
         >
           {/* Realistic Earth */}
           <img
-            src="/earth-real.png"
+            src={`${import.meta.env.BASE_URL}earth-real.png`}
             alt="Earth"
             style={{
               width: '100%',
@@ -148,7 +148,7 @@ const OrbitalSystem = () => {
           
           {/* Sketch Blueprint Overlay */}
           <img
-            src="/earth-sketch.jpg"
+            src={`${import.meta.env.BASE_URL}earth-sketch.jpg`}
             alt="Earth Blueprint Sketch"
             style={{
               position: 'absolute',

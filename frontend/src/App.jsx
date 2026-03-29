@@ -272,7 +272,7 @@ function App() {
             }}
           >
             <div className="brand-logo">
-              <img src="/biometric-trace.jpg" alt="Castellan Logo" />
+              <img src={`${import.meta.env.BASE_URL}biometric-trace.jpg`} alt="Castellan Logo" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <span className="brand-name" style={{ fontSize: '1.35rem' }}>CASTELLAN</span>

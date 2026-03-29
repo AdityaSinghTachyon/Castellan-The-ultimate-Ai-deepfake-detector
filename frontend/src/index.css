@@ -34,7 +34,7 @@ html, body, #root {
   transform: translate(-50%, -50%) scale(2.0);
   width: 100vw;
   height: 100vh;
-  background-image: url('/biometric-trace.jpg');
+  background-image: url('./biometric-trace.jpg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
