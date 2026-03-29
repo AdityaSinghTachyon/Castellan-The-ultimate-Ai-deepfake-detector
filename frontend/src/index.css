@@ -34,14 +34,13 @@ html, body, #root {
   transform: translate(-50%, -50%) scale(2.0);
   width: 100vw;
   height: 100vh;
-  background-image: url('./biometric-trace.jpg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.10; /* slightly more evident blueprint feel */
+  opacity: 0.10;
   pointer-events: none;
   z-index: -1;
-  filter: grayscale(1) invert(0.2); 
+  filter: grayscale(1) invert(0.2);
 }
 
 

@@ -249,7 +249,7 @@ function App() {
     <>
       <FabricCanvas isFake={isFake} />
       <OrbitalSystem />
-      <div className="faint-background-trace" />
+      <div className="faint-background-trace" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}biometric-trace.jpg)` }} />
 
       <div className="app-shell">
         {/* ── Header ── */}
