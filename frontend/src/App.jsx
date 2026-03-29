@@ -177,10 +177,13 @@ function App() {
   ];
 
   useEffect(() => {
-    // Ping backend on mount to verify connection
+    // Ping backend with timeout — handles Render cold start
     const ping = async () => {
       try {
-        const res = await fetch(`${API_URL}/`);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        const res = await fetch(`${API_URL}/`, { signal: controller.signal });
+        clearTimeout(timeout);
         if (res.ok) setBackendStatus('ONLINE');
         else setBackendStatus('ERROR');
       } catch {
@@ -188,6 +191,9 @@ function App() {
       }
     };
     ping();
+    // Retry once after 20s to catch slow Render cold starts
+    const retry = setTimeout(ping, 20000);
+    return () => clearTimeout(retry);
   }, []);
 
   useEffect(() => {
