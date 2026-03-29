@@ -75,9 +75,8 @@ def run_heuristics(image_bytes: bytes) -> dict:
         laplacian = cv2.Laplacian(gray, cv2.CV_64F)
         lap_var = float(np.var(laplacian))
 
-        # ── Marker Positions ───────────────────────────────────────────────
-        # We'll compute these in fuse now to allow for verdict-based density
-        # markers = _compute_markers(gray, img, faces, edges)
+        # ── Marker Positions (computed in fuse() based on verdict) ────────────
+        markers = []  # placeholder — populated later in fuse()
 
         return {
             "has_face": bool(has_face),
