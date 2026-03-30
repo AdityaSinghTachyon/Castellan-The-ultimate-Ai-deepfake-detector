@@ -177,23 +177,37 @@ function App() {
   ];
 
   useEffect(() => {
-    // Ping backend with timeout — handles Render cold start
+    let intervalId;
+    let attempts = 0;
+
     const ping = async () => {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout per ping
         const res = await fetch(`${API_URL}/`, { signal: controller.signal });
         clearTimeout(timeout);
-        if (res.ok) setBackendStatus('ONLINE');
-        else setBackendStatus('ERROR');
+        
+        if (res.ok) {
+          setBackendStatus('ONLINE');
+          if (intervalId) clearInterval(intervalId);
+        } else {
+          setBackendStatus('ERROR');
+        }
       } catch {
-        setBackendStatus('OFFLINE');
+        attempts++;
+        if (attempts >= 6) { // Stop checking after ~1 minute
+          setBackendStatus('OFFLINE');
+          if (intervalId) clearInterval(intervalId);
+        } else {
+          setBackendStatus('WAKING SERVER...');
+        }
       }
     };
+
     ping();
-    // Retry once after 20s to catch slow Render cold starts
-    const retry = setTimeout(ping, 20000);
-    return () => clearTimeout(retry);
+    intervalId = setInterval(ping, 10000); // Poll every 10 seconds
+
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
