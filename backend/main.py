@@ -15,13 +15,7 @@ app = FastAPI(title="Castellan API", version="1.0.0")
 # Allow CORS for local frontend execution
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:3000",
-        "https://adityasinghtachyon.github.io",
-        "https://castellan-the-ultimate-ai-deepfake.onrender.com",
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
